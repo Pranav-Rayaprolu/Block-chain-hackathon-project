@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donation Portal</title>
+    <!-- Include Web3.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.3.0/dist/web3.min.js"></script>
+    <link rel="stylesheet" href="Donationstyle.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Donation Portal</h1>
+        <div class="input-box">
+            <label for="donorName">Donor Name:</label>
+            <input type="text" id="donorName" placeholder="Enter your name...">
+        </div>
+        <div class="input-box">
+            <label for="purpose">Purpose of Donation:</label>
+            <input type="text" id="purpose" placeholder="Enter purpose...">
+        </div>
+        <div class="input-box">
+            <label for="donationAmount">Amount to Donate (ETH):</label>
+            <input type="number" id="donationAmount" placeholder="Enter amount...">
+        </div>
+        <button onclick="connectWallet()">Connect Wallet</button>
+        <button onclick="makeDonation()">Make Donation</button>
+    </div>
+
+    <script>
+        let web3;
+    
+        // Check if Web3 has been injected by the browser (MetaMask)
+        if (typeof window.ethereum !== 'undefined') {
+            // Use MetaMask's provider
+            web3 = new Web3(window.ethereum);
+            // Request account access if needed
+            window.ethereum.enable();
+        } else {
+            // Handle the case where the user doesn't have MetaMask installed
+            alert('Please install MetaMask to make donations.');
+            // Optionally, you could also redirect the user to a page explaining how to install MetaMask.
+            // For example:
+            // window.location.href = 'https://metamask.io/download.html';
+        }
+    
+        // Function to check if MetaMask is installed and connected
+        async function checkMetaMask() {
+            if (window.ethereum) {
+                window.web3 = new Web3(window.ethereum);
+                try {
+                    // Request account access
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    return true; // MetaMask is installed and connected
+                } catch (error) {
+                    console.error('User denied account access:', error);
+                    return false; // User denied account access
+                }
+            } else {
+                console.error('MetaMask is not installed');
+                return false; // MetaMask is not installed
+            }
+        }
+    
+        // Function to connect MetaMask wallet
+        async function connectWallet() {
+            const isConnected = await checkMetaMask();
+            if (isConnected) {
+                console.log('Connected to MetaMask');
+                // You can perform additional actions after connecting to MetaMask
+            } else {
+                alert('Please install MetaMask to make a donation.');
+            }
+        }
+    
+        // Function to make donation
+        async function makeDonation() {
+            const donorName = document.getElementById('donorName').value;
+            const purpose = document.getElementById('purpose').value;
+            const donationAmount = document.getElementById('donationAmount').value;
+            
+            if (!donorName || !purpose || !donationAmount) {
+                alert('Please fill in all fields.');
+                return;
+            }
+            
+            const recipientAddress = '0x123...'; // Replace with charity organization's address
+            web3.eth.sendTransaction({
+                from: (await web3.eth.getAccounts())[0],
+                to: recipientAddress,
+                value: web3.utils.toWei(donationAmount, 'ether')
+            })
+            .on('transactionHash', function(hash){
+                console.log('Transaction Hash:', hash);
+                alert('Thank you for your donation! Transaction hash: ' + hash);
+            })
+            .on('error', function(error) {
+                console.error('Error sending transaction:', error);
+                alert('Failed to send donation. Please try again later.');
+            });
+        }
+    </script>
+    
+</body>
+</html>
